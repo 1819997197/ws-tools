@@ -18,6 +18,8 @@ Flags:
 
 2.生成代码
 go run main.go sql --conn="user:pwd@tcp(ip:port)/db?charset=utf8&parseTime=true"
+
+3.具体使用细节见<model生成工具说明.md>
 ```
 
 注：获取表结构信息部分fork于https://github.com/laixyz/go-mysql-model-creator.git(修复了部分获取索引bug)
