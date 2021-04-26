@@ -29,7 +29,7 @@ var modelCmd = &cobra.Command{
 
 func init() {
 	modelCmd.Flags().StringVarP(&distPath, "dist", "", "./models", "model层代码生产目录")
-	modelCmd.Flags().StringVarP(&packageName, "pkg", "", "models", "生成的代码与src的相对路径")
+	modelCmd.Flags().StringVarP(&packageName, "pkg", "", "models", "生成的代码包名(默认models)")
 	modelCmd.Flags().StringVarP(&connect, "conn", "", "", "数据库连接dsn user:pwd@tcp(ip:port)/table?charset=utf8&parseTime=true")
 	modelCmd.Flags().StringVarP(&destTableName, "table", "", "", "所需生成的表，用逗号分割(默认导出所有的表)")
 }
