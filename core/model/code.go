@@ -61,15 +61,13 @@ func TableDoc(table *MysqlTable, packageName string) string {
 
 func GetInterfaceMethod(table *MysqlTable, packageName string) string {
 	var strMethod string
-	_, paramInitCode, _ := table.Primary2Code()
 	strMethod += "//go:generate mockgen -destination=./mock/" + table.Table + ".go -package=mock {{" + packageName + "}} " + table.TableAlias + "RepositoryIFace\n"
 	strMethod += "type " + table.TableAlias + "RepositoryIFace interface {\n"
-	strMethod += "\tFindInfoList(fields string, vars ...string) ([]*" + table.TableAlias + "Model, error)\n"
-	strMethod += "\tFindInfoByPrimaryID(fields string, " + paramInitCode + ") (*" + table.TableAlias + "Model, error)\n"
 	strMethod += "\tCreate(data *" + table.TableAlias + "Model) error\n"
 	strMethod += "\tTxCreate(tx *gorm.DB, data *" + table.TableAlias + "Model) error\n"
 	strMethod += "\tSave(data *" + table.TableAlias + "Model) error\n"
 	strMethod += "\tTxSave(tx *gorm.DB, data *" + table.TableAlias + "Model) error\n"
+	strMethod += "\tUpdateFields(where, updateFiles map[string]interface{}) error\n"
 	strMethod += "}\n\n"
 	return strMethod
 }
@@ -77,15 +75,10 @@ func GetInterfaceMethod(table *MysqlTable, packageName string) string {
 // GetStructMethod 获取表结构
 func GetStructMethod(table *MysqlTable) string {
 	var strMethod string
-	whereSQL, paramInitCode, paramListCode := table.Primary2Code()
-	strMethod += "\n// FindInfoList 根据条件查找列表\n"
-	strMethod += "func (entity *" + table.TableAlias + "Entity) FindInfoList(fields string, vars ...string) ([]*" + table.TableAlias + "Model, error) { \n"
-	strMethod += "\tvar sqlWhere = \"1=1\"\n"
-	strMethod += "\tif len(vars) > 0 {\n"
-	strMethod += "\t\tsqlWhere = vars[0]\n"
-	strMethod += "\t}\n"
+	strMethod += "\n// getListBy 根据条件查找列表\n"
+	strMethod += "func (entity *" + table.TableAlias + "Entity) getListBy(fields string, where map[string]interface{}) ([]*" + table.TableAlias + "Model, error) { \n"
 	strMethod += "\tvar list []*" + table.TableAlias + "Model\n"
-	strMethod += "\tquery := entity.db.Where(sqlWhere)\n"
+	strMethod += "\tquery := entity.db.Where(where)\n"
 	strMethod += "\tif fields != \"\" {\n"
 	strMethod += "\t\tquery = query.Select(fields)\n"
 	strMethod += "\t} else {\n"
@@ -101,26 +94,24 @@ func GetStructMethod(table *MysqlTable) string {
 	strMethod += "\treturn list, nil\n"
 	strMethod += "}\n"
 
-	if table.HasPrimary {
-		strMethod += "\n// FindInfoByPrimaryID 根据主键查找一条记录\n"
-		strMethod += "func (entity *" + table.TableAlias + "Entity) FindInfoByPrimaryID(fields string, " + paramInitCode + ") (*" + table.TableAlias + "Model, error) { \n"
-		strMethod += "\tvar model = &" + table.TableAlias + "Model{}\n"
-		strMethod += "\tquery := entity.db.Where(\"" + whereSQL + "\", " + paramListCode + ")\n"
-		strMethod += "\tif fields != \"\" {\n"
-		strMethod += "\t\tquery = query.Select(fields)\n"
-		strMethod += "\t} else {\n"
-		strMethod += "\t\tquery = query.Select(" + strings.Join(table.FieldNames, ", ") + ")\n"
-		strMethod += "\t}\n"
-		strMethod += "\terr := query.First(model).Error\n"
-		strMethod += "\tif err == gorm.ErrRecordNotFound {\n"
-		strMethod += "\t\treturn nil, nil\n"
-		strMethod += "\t}\n"
-		strMethod += "\tif err != nil {\n"
-		strMethod += "\t\treturn nil, err\n"
-		strMethod += "\t}\n"
-		strMethod += "\treturn model, nil\n"
-		strMethod += "}\n"
-	}
+	strMethod += "\n// getBy 根据条件查找一条记录\n"
+	strMethod += "func (entity *" + table.TableAlias + "Entity) getBy(fields string, where map[string]interface{}) (*" + table.TableAlias + "Model, error) { \n"
+	strMethod += "\tvar model = &" + table.TableAlias + "Model{}\n"
+	strMethod += "\tquery := entity.db.Where(where)\n"
+	strMethod += "\tif fields != \"\" {\n"
+	strMethod += "\t\tquery = query.Select(fields)\n"
+	strMethod += "\t} else {\n"
+	strMethod += "\t\tquery = query.Select(" + strings.Join(table.FieldNames, ", ") + ")\n"
+	strMethod += "\t}\n"
+	strMethod += "\terr := query.First(model).Error\n"
+	strMethod += "\tif err == gorm.ErrRecordNotFound {\n"
+	strMethod += "\t\treturn nil, nil\n"
+	strMethod += "\t}\n"
+	strMethod += "\tif err != nil {\n"
+	strMethod += "\t\treturn nil, err\n"
+	strMethod += "\t}\n"
+	strMethod += "\treturn model, nil\n"
+	strMethod += "}\n"
 
 	strMethod += GetSaveFunc(table)
 	strMethod += GetUpdateFunc(table)
@@ -153,6 +144,11 @@ func GetUpdateFunc(table *MysqlTable) string {
 	strMethod += "\n// TxSave 更新记录\n"
 	strMethod += "func (entity *" + table.TableAlias + "Entity) TxSave(tx *gorm.DB, data *" + table.TableAlias + "Model) error {\n"
 	strMethod += "\treturn tx.Save(data).Error\n"
+	strMethod += "}\n"
+
+	strMethod += "\n// UpdateFields 根据条件更新记录\n"
+	strMethod += "func (entity *" + table.TableAlias + "Entity) UpdateFields(where, updateFiles map[string]interface{}) error {\n"
+	strMethod += "\treturn entity.db.Where(where).UpdateColumns(updateFiles).Error\n"
 	strMethod += "}\n"
 	return strMethod
 }
