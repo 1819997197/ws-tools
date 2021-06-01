@@ -1,9 +1,5 @@
 package model
 
-import (
-	"strings"
-)
-
 // Header 生成代码
 func Header(table *MysqlTable, packageName string) string {
 	var fileContent = ""
@@ -81,8 +77,6 @@ func GetStructMethod(table *MysqlTable) string {
 	strMethod += "\tquery := entity.db.Where(where)\n"
 	strMethod += "\tif fields != \"\" {\n"
 	strMethod += "\t\tquery = query.Select(fields)\n"
-	strMethod += "\t} else {\n"
-	strMethod += "\t\tquery = query.Select(" + strings.Join(table.FieldNames, ", ") + ")\n"
 	strMethod += "\t}\n"
 	strMethod += "\terr := query.Find(&list).Error\n"
 	strMethod += "\tif err == gorm.ErrRecordNotFound {\n"
@@ -100,8 +94,6 @@ func GetStructMethod(table *MysqlTable) string {
 	strMethod += "\tquery := entity.db.Where(where)\n"
 	strMethod += "\tif fields != \"\" {\n"
 	strMethod += "\t\tquery = query.Select(fields)\n"
-	strMethod += "\t} else {\n"
-	strMethod += "\t\tquery = query.Select(" + strings.Join(table.FieldNames, ", ") + ")\n"
 	strMethod += "\t}\n"
 	strMethod += "\terr := query.First(model).Error\n"
 	strMethod += "\tif err == gorm.ErrRecordNotFound {\n"
@@ -148,7 +140,7 @@ func GetUpdateFunc(table *MysqlTable) string {
 
 	strMethod += "\n// UpdateFields 根据条件更新记录\n"
 	strMethod += "func (entity *" + table.TableAlias + "Entity) UpdateFields(where, updateFiles map[string]interface{}) error {\n"
-	strMethod += "\treturn entity.db.Where(where).UpdateColumns(updateFiles).Error\n"
+	strMethod += "\treturn entity.db.Model(" + table.TableAlias + "Model{}).Where(where).UpdateColumns(updateFiles).Error\n"
 	strMethod += "}\n"
 	return strMethod
 }
