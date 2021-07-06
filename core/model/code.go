@@ -96,7 +96,7 @@ func GetStructMethod(table *MysqlTable) string {
 	strMethod += "\treturn entity.findOne(query, fields)\n"
 	strMethod += "}\n"
 
-	strMethod += "func (entity *" + table.TableAlias + "Entity) findAll(query *gorm.DB, fields string) ([]*" + table.TableAlias + "Model, error) { \n"
+	strMethod += "\nfunc (entity *" + table.TableAlias + "Entity) findAll(query *gorm.DB, fields string) ([]*" + table.TableAlias + "Model, error) { \n"
 	strMethod += "\tvar list []*" + table.TableAlias + "Model\n"
 	strMethod += "\tif fields != \"\" {\n"
 	strMethod += "\t\tquery = query.Select(fields)\n"
@@ -111,7 +111,7 @@ func GetStructMethod(table *MysqlTable) string {
 	strMethod += "\treturn list, nil\n"
 	strMethod += "}\n"
 
-	strMethod += "func (entity *" + table.TableAlias + "Entity) findOne(query *gorm.DB, fields string) (*" + table.TableAlias + "Model, error) { \n"
+	strMethod += "\nfunc (entity *" + table.TableAlias + "Entity) findOne(query *gorm.DB, fields string) (*" + table.TableAlias + "Model, error) { \n"
 	strMethod += "\tvar model = &" + table.TableAlias + "Model{}\n"
 	strMethod += "\tif fields != \"\" {\n"
 	strMethod += "\t\tquery = query.Select(fields)\n"
